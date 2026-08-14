@@ -3,22 +3,165 @@
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>Document</title>
-    <script >
-        const url="https://dummyjson.com/products";
-        async function fetchData(){
-            try{
-                const response=await fetch(url);
-                const data=await response.json();
-                console.log(data);
-            }catch(error){
-                console.log("Error:",error);
+    <title>Fetch API</title>
+
+    <style>
+        table {
+            width: 100%;
+            border-collapse: collapse;
+            margin-bottom: 30px;
+        }
+
+        th, td {
+            padding: 10px;
+            text-align: center;
+        }
+
+        img {
+            width: 80px;
+            height: 80px;
+            object-fit: contain;
+        }
+
+        th {
+            background-color: #f2f2f2;
+        }
+    </style>
+</head>
+
+<body>
+
+    <!-- Products Table -->
+    <table border="1">
+        <thead>
+            <tr>
+                <th>Sr No</th>
+                <th>Title</th>
+                <th>Image</th>
+                <th>Category</th>
+                <th>Rating</th>
+                <th>Price</th>
+                <th>Stock</th>
+                <th>Add to Cart</th>
+            </tr>
+        </thead>
+
+        <tbody id="data1"></tbody>
+    </table>
+
+
+    <!-- Cart Table -->
+    <table border="1">
+        <thead>
+            <tr>
+                <th>Sr No</th>
+                <th>Title</th>
+                <th>Price</th>
+            </tr>
+        </thead>
+
+        <tbody id="data2"></tbody>
+    </table>
+
+    <button onclick="placeorder(product)">Place Order</button>
+
+
+    <script>
+
+        const url = "https://dummyjson.com/products";
+        const url2 = "https://api.frankfurter.dev/v2/rate/USD/INR";
+
+        let product = [];
+
+
+        async function fetchData() {
+
+            try {
+
+                const response = await fetch(url);
+                const response2 = await fetch(url2);
+
+                const data = await response.json();
+                const data2 = await response2.json();
+
+                const rate = data2.rate;
+
+                const ele = document.getElementById("data1");
+
+                data.products.map((i, index) => {
+
+                    ele.innerHTML += `
+                        <tr>
+                            <td>${index + 1}</td>
+
+                            <td>${i.title}</td>
+
+                            <td>
+                                <img src="${i.thumbnail}" alt="${i.title}">
+                            </td>
+
+                            <td>${i.category}</td>
+
+                            <td>${i.rating}</td>
+
+                            <td>₹${(i.price * rate).toFixed(2)}</td>
+
+                            <td>${i.stock}</td>
+
+                            <td>
+                                <button onclick="addToCart(${i.id}, '${i.title}', ${i.price * rate})">
+                                    Add to Cart
+                                </button>
+                            </td>
+                        </tr>
+                    `;
+                });
+
+            } catch (error) {
+
+                console.log("Error:", error);
+
             }
         }
+
+
+        function addToCart(id, title, price) {
+
+            product.push({
+                id: id,
+                title: title,
+                price: price
+            });
+
+            console.log("Product added to cart:", product);
+        }
+
+
+       function placeorder(product) {
+    console.log("Button clicked");
+    console.log(product);
+
+    const ele = document.getElementById("data2");
+
+    ele.innerHTML = "";
+
+    product.forEach((i, index) => {
+        ele.innerHTML += `
+            <tr>
+                <td>${index + 1}</td>
+                <td>${i.title}</td>
+                <td>₹${i.price.toFixed(2)}</td>
+            </tr>
+        `;
+    });
+}
+
+        
+
+
         fetchData();
+
     </script>
-</head>
-<body>
-    
+
 </body>
 </html>
