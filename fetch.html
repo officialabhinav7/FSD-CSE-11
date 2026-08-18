@@ -3,163 +3,177 @@
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>Fetch API</title>
+    <title>Fetch in JS</title>
 
     <style>
         table {
-            width: 100%;
+            margin: auto;
             border-collapse: collapse;
-            margin-bottom: 30px;
         }
 
         th, td {
+            border: 1px solid black;
             padding: 10px;
             text-align: center;
         }
 
-        img {
-            width: 80px;
-            height: 80px;
-            object-fit: contain;
+        button {
+            padding: 3px 8px;
+            margin: 2px;
         }
 
-        th {
-            background-color: #f2f2f2;
+        img {
+            object-fit: contain;
         }
     </style>
 </head>
 
 <body>
 
-    <!-- Products Table -->
-    <table border="1">
-        <thead>
-            <tr>
-                <th>Sr No</th>
-                <th>Title</th>
-                <th>Image</th>
-                <th>Category</th>
-                <th>Rating</th>
-                <th>Price</th>
-                <th>Stock</th>
-                <th>Add to Cart</th>
-            </tr>
-        </thead>
+    <h1 align="center">List of Products</h1>
 
-        <tbody id="data1"></tbody>
+    <table id="data">
+        <tr>
+            <th>Index</th>
+            <th>ID</th>
+            <th>Title</th>
+            <th>Image</th>
+            <th>Price (INR)</th>
+            <th>Category</th>
+            <th>Stock</th>
+            <th>Quantity</th>
+        </tr>
     </table>
-
-
-    <!-- Cart Table -->
-    <table border="1">
-        <thead>
-            <tr>
-                <th>Sr No</th>
-                <th>Title</th>
-                <th>Price</th>
-            </tr>
-        </thead>
-
-        <tbody id="data2"></tbody>
-    </table>
-
-    <button onclick="placeorder(product)">Place Order</button>
-
 
     <script>
 
         const url = "https://dummyjson.com/products";
-        const url2 = "https://api.frankfurter.dev/v2/rate/USD/INR";
 
-        let product = [];
-
-
-        async function fetchData() {
+        
+        async function getRate() {
 
             try {
 
-                const response = await fetch(url);
-                const response2 = await fetch(url2);
+                const URL = "https://open.er-api.com/v6/latest/USD";
 
-                const data = await response.json();
-                const data2 = await response2.json();
+                const res = await fetch(URL);
 
-                const rate = data2.rate;
+                if (!res.ok) {
+                    throw new Error("Currency API failed");
+                }
 
-                const ele = document.getElementById("data1");
+                const data = await res.json();
 
-                data.products.map((i, index) => {
+                const rate = Number(data.rates.INR);
 
-                    ele.innerHTML += `
-                        <tr>
-                            <td>${index + 1}</td>
+                console.log("INR Rate =", rate);
 
-                            <td>${i.title}</td>
+                return rate;
 
-                            <td>
-                                <img src="${i.thumbnail}" alt="${i.title}">
-                            </td>
+            } 
+            catch (err) {
 
-                            <td>${i.category}</td>
+                console.log("Rate Error:", err);
 
-                            <td>${i.rating}</td>
-
-                            <td>₹${(i.price * rate).toFixed(2)}</td>
-
-                            <td>${i.stock}</td>
-
-                            <td>
-                                <button onclick="addToCart(${i.id}, '${i.title}', ${i.price * rate})">
-                                    Add to Cart
-                                </button>
-                            </td>
-                        </tr>
-                    `;
-                });
-
-            } catch (error) {
-
-                console.log("Error:", error);
+               
+                return 88;
 
             }
         }
 
 
-        function addToCart(id, title, price) {
+       
+        function increase(btn) {
 
-            product.push({
-                id: id,
-                title: title,
-                price: price
-            });
+            let q = btn.previousElementSibling;
 
-            console.log("Product added to cart:", product);
+            q.innerText = Number(q.innerText) + 1;
         }
 
 
-       function placeorder(product) {
-    console.log("Button clicked");
-    console.log(product);
+        
+        function decrease(btn) {
 
-    const ele = document.getElementById("data2");
+            let q = btn.nextElementSibling;
 
-    ele.innerHTML = "";
+            if (Number(q.innerText) > 0) {
 
-    product.forEach((i, index) => {
-        ele.innerHTML += `
-            <tr>
-                <td>${index + 1}</td>
-                <td>${i.title}</td>
-                <td>₹${i.price.toFixed(2)}</td>
-            </tr>
-        `;
-    });
-}
+                q.innerText = Number(q.innerText) - 1;
+
+            }
+        }
+
 
         
+        async function loadProduct() {
 
+            try {
 
-        fetchData();
+                const table = document.getElementById("data");
+
+                
+                const rate = await getRate();
+
+                
+                const res = await fetch(url);
+
+                if (!res.ok) {
+                    throw new Error("Product API failed");
+                }
+
+                const data = await res.json();
+
+                console.log(data);
+
+                data.products.forEach((i, index) => {
+
+                    table.innerHTML += `
+                        <tr>
+
+                            <td>${index + 1}</td>
+
+                            <td>${i.id}</td>
+
+                            <td>${i.title}</td>
+
+                            <td>
+                                <img src="${i.images[0]}"
+                                   width="50"
+                                    height="50">
+                            </td>
+
+                            <td>
+                                ₹${(i.price * rate).toFixed(2)}
+                            </td>
+
+                            <td>${i.category}</td>
+
+                            <td>${i.stock}</td>
+
+                            <td>
+                                <button onclick="decrease(this)">-</button>
+
+                                <span>0</span>
+
+                                <button onclick="increase(this)">+</button>
+                            </td>
+
+                        </tr>
+                    `;
+
+                });
+
+            }
+            catch (err) {
+
+                console.log("Error:", err);
+
+            }
+
+        }
+
+        
+        loadProduct();
 
     </script>
 
